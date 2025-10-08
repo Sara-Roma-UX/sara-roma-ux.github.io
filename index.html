@@ -7,13 +7,17 @@
   <style>
     html,body{height:100%;margin:0;background:#fff}
     .stage{position:fixed;inset:0;overflow:auto;background:#fff}
-    .wrap{position:relative; width:100vw; margin:0 auto}
+    .wrap{position:relative;width:100vw;margin:0 auto}
     .page{display:block;width:100vw;height:auto;object-fit:contain}
-    /* Áreas clicables (invisibles). En modo debug se pintan. */
-    .hotspot{position:absolute;display:block;transform:translate(-50%,-50%);background:transparent;outline:0;}
-    .debug .hotspot{background:rgba(255,0,128,.15); outline:2px dashed rgba(255,0,128,.6)}
-    /* Tooltip de ayuda (solo debug) */
-    .hint{position:fixed;left:10px;bottom:10px;background:#fff;border:1px solid #eee;border-radius:10px;padding:.45rem .6rem;font:14px/1.3 system-ui;opacity:.9;display:none}
+
+    /* Hotspots invisibles; en modo edición (debug) se ven */
+    .hotspot{position:absolute;display:block;transform:translate(-50%,-50%);background:transparent;outline:0;z-index:2}
+    .debug .hotspot{background:rgba(255,0,128,.15);outline:2px dashed rgba(255,0,128,.6)}
+    .debug .wrap{cursor:crosshair}
+
+    /* Ayuda on-screen (solo en modo edición) */
+    .hint{position:fixed;left:10px;bottom:10px;background:#fff;border:1px solid #eee;border-radius:10px;
+          padding:.45rem .6rem;font:14px/1.3 system-ui;opacity:.9;display:none;z-index:3}
     .debug .hint{display:block}
   </style>
 </head>
@@ -21,29 +25,26 @@
   <div class="stage">
     <div class="wrap" id="wrap">
       <img class="page" id="page" src="assets/page-1.jpg" alt="Dossier de Sara Rom">
-      <!-- === Hotspots (EDITA href= y ajusta posiciones) ===
-           Coordenadas en % (left/top) para que escalen con la imagen.
-           * Colócalos con el modo debug (tecla H), clic para mover y teclas para ajustar tamaño. -->
+      <!-- === Hotspots (EDITA href= y ajusta posiciones) === -->
       <a class="hotspot" id="hs-tel"  href="tel:+34637090041" aria-label="Llamar"
-         style="left:18%; top:93%; width:20%; height:4%;"></a>
+         style="left:18%; top:93%; width:10%; height:3%;"></a>
 
       <a class="hotspot" id="hs-mail" href="mailto:sara@sararoma.es" aria-label="Email"
-         style="left:45%; top:93%; width:28%; height:4%;"></a>
+         style="left:45%; top:93%; width:14%; height:3%;"></a>
 
       <a class="hotspot" id="hs-li"   href="https://www.linkedin.com/in/sara-roma-pena" target="_blank" rel="noopener" aria-label="LinkedIn"
-         style="left:77%; top:93%; width:25%; height:4%;"></a>
+         style="left:77%; top:93%; width:12%; height:3%;"></a>
     </div>
   </div>
 
-  <!-- Ayuda on-screen (solo en modo debug) -->
   <div class="hint" id="hint">
-    <b>Modo colocación</b> — pulsa <b>H</b> para activar/ocultar.<br>
-    1/2/3: seleccionar Tel/Email/LinkedIn · Click: mover centro<br>
-    ←/→: ancho ±1% · ↑/↓: alto ±1% · <b>E</b>: copiar estilos por consola
+    <b>Modo edición</b> activo. Click para mover. 1/2/3 selecciona Tel/Email/LinkedIn.<br>
+    Flechas: tamaño · Paso normal=0,5% · <b>Shift</b>=0,1% · <b>Alt</b>=0,05% · <b>E</b> exporta.
+    <br>Pulsa <b>H</b> para salir de edición (ocultar rosa).
   </div>
 
   <script>
-    // --- Sincroniza alto del contenedor con la imagen (para que los hotspots coincidan)
+    // --- Sincroniza alto del contenedor con la imagen (coincidan clicks y hotspots)
     const wrap = document.getElementById('wrap');
     const img  = document.getElementById('page');
     function syncWrapHeight(){ wrap.style.height = img.clientHeight + 'px'; }
@@ -51,42 +52,56 @@
     window.addEventListener('resize', syncWrapHeight);
     syncWrapHeight();
 
-    // --- Modo debug para colocar hotspots
+    // --- Hotspots
     const hs = {
       1: document.getElementById('hs-tel'),
       2: document.getElementById('hs-mail'),
       3: document.getElementById('hs-li')
     };
-    let current = 1;  // hotspot seleccionado
+    let current = 1;  // seleccionado
+    const MIN = 0.1;  // tamaño mínimo en %
 
-    // Toggle debug con H
+    // Activa modo edición si la URL trae ?edit=1
+    const params = new URLSearchParams(location.search);
+    if (params.get('edit') === '1') document.body.classList.add('debug');
+
+    // Toggle edición con H
     window.addEventListener('keydown', (e)=>{
       const k = (e.key||'').toLowerCase();
       if (k === 'h'){ document.body.classList.toggle('debug'); }
       if (k === '1' || k === '2' || k === '3'){ current = Number(k); }
+
       if (!document.body.classList.contains('debug')) return;
 
       const el = hs[current];
-      const step = 1; // % de cambio
-      if (['arrowleft','arrowright','arrowup','arrowdown'].includes(e.key.toLowerCase())){
+      const style = el.style;
+
+      // Paso base 0.5%; con Shift 0.1%; con Alt 0.05%
+      const base = 0.5;
+      const step = e.shiftKey ? 0.1 : (e.altKey ? 0.05 : base);
+
+      const clamp = (v,min,max)=>Math.max(min,Math.min(max,v));
+      const w = parseFloat(style.width)  || 10;
+      const h = parseFloat(style.height) || 3;
+
+      const key = e.key.toLowerCase();
+      if (['arrowleft','arrowright','arrowup','arrowdown'].includes(key)){
         e.preventDefault();
-        const style = el.style;
-        const w = parseFloat(style.width)  || 10;
-        const h = parseFloat(style.height) || 4;
-        if (e.key.toLowerCase()==='arrowleft')  style.width  = Math.max(1, w - step) + '%';
-        if (e.key.toLowerCase()==='arrowright') style.width  = Math.min(100, w + step) + '%';
-        if (e.key.toLowerCase()==='arrowup')    style.height = Math.max(1, h - step) + '%';
-        if (e.key.toLowerCase()==='arrowdown')  style.height = Math.min(100, h + step) + '%';
+        if (key==='arrowleft')  style.width  = clamp(w - step, MIN, 100) + '%';
+        if (key==='arrowright') style.width  = clamp(w + step, MIN, 100) + '%';
+        if (key==='arrowup')    style.height = clamp(h - step, MIN, 100) + '%';
+        if (key==='arrowdown')  style.height = clamp(h + step, MIN, 100) + '%';
       }
+
+      // Exporta estilos actuales por consola para fijarlos
       if (k === 'e'){
-        // Exporta estilos actuales por consola para copiar/pegar
-        Object.entries(hs).forEach(([id, node])=>{
+        Object.values(hs).forEach(node=>{
           console.log(`#${node.id}: left:${node.style.left}; top:${node.style.top}; width:${node.style.width}; height:${node.style.height};`);
         });
       }
     });
 
-    // Click para mover el hotspot seleccionado (centro del rectángulo)
+    // Click para mover el hotspot seleccionado (solo en modo edición)
     wrap.addEventListener('click',(e)=>{
       if (!document.body.classList.contains('debug')) return;
       const r = wrap.getBoundingClientRect();
