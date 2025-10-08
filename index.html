@@ -3,18 +3,100 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>SARA ROMA · Dossier (full screen)</title>
+  <title>SARA ROMA · Dossier (hotspots)</title>
   <style>
     html,body{height:100%;margin:0;background:#fff}
-    /* lienzo a pantalla completa */
     .stage{position:fixed;inset:0;overflow:auto;background:#fff}
-    .page{display:block;width:100vw;min-height:100vh;object-fit:contain}
+    .wrap{position:relative; width:100vw; margin:0 auto}
+    .page{display:block;width:100vw;height:auto;object-fit:contain}
+    /* Áreas clicables (invisibles). En modo debug se pintan. */
+    .hotspot{position:absolute;display:block;transform:translate(-50%,-50%);background:transparent;outline:0;}
+    .debug .hotspot{background:rgba(255,0,128,.15); outline:2px dashed rgba(255,0,128,.6)}
+    /* Tooltip de ayuda (solo debug) */
+    .hint{position:fixed;left:10px;bottom:10px;background:#fff;border:1px solid #eee;border-radius:10px;padding:.45rem .6rem;font:14px/1.3 system-ui;opacity:.9;display:none}
+    .debug .hint{display:block}
   </style>
 </head>
 <body>
-  <!-- Imagen a pantalla completa sin botones -->
   <div class="stage">
-    <img class="page" src="assets/page-1.jpg" alt="Dossier de Sara Rom">
+    <div class="wrap" id="wrap">
+      <img class="page" id="page" src="assets/page-1.jpg" alt="Dossier de Sara Rom">
+      <!-- === Hotspots (EDITA href= y ajusta posiciones) ===
+           Coordenadas en % (left/top) para que escalen con la imagen.
+           * Colócalos con el modo debug (tecla H), clic para mover y teclas para ajustar tamaño. -->
+      <a class="hotspot" id="hs-tel"  href="tel:+34637090041" aria-label="Llamar"
+         style="left:18%; top:93%; width:20%; height:4%;"></a>
+
+      <a class="hotspot" id="hs-mail" href="mailto:sara@sararoma.es" aria-label="Email"
+         style="left:45%; top:93%; width:28%; height:4%;"></a>
+
+      <a class="hotspot" id="hs-li"   href="https://www.linkedin.com/in/sara-roma-pena" target="_blank" rel="noopener" aria-label="LinkedIn"
+         style="left:77%; top:93%; width:25%; height:4%;"></a>
+    </div>
   </div>
+
+  <!-- Ayuda on-screen (solo en modo debug) -->
+  <div class="hint" id="hint">
+    <b>Modo colocación</b> — pulsa <b>H</b> para activar/ocultar.<br>
+    1/2/3: seleccionar Tel/Email/LinkedIn · Click: mover centro<br>
+    ←/→: ancho ±1% · ↑/↓: alto ±1% · <b>E</b>: copiar estilos por consola
+  </div>
+
+  <script>
+    // --- Sincroniza alto del contenedor con la imagen (para que los hotspots coincidan)
+    const wrap = document.getElementById('wrap');
+    const img  = document.getElementById('page');
+    function syncWrapHeight(){ wrap.style.height = img.clientHeight + 'px'; }
+    img.addEventListener('load', syncWrapHeight);
+    window.addEventListener('resize', syncWrapHeight);
+    syncWrapHeight();
+
+    // --- Modo debug para colocar hotspots
+    const hs = {
+      1: document.getElementById('hs-tel'),
+      2: document.getElementById('hs-mail'),
+      3: document.getElementById('hs-li')
+    };
+    let current = 1;  // hotspot seleccionado
+
+    // Toggle debug con H
+    window.addEventListener('keydown', (e)=>{
+      const k = (e.key||'').toLowerCase();
+      if (k === 'h'){ document.body.classList.toggle('debug'); }
+      if (k === '1' || k === '2' || k === '3'){ current = Number(k); }
+      if (!document.body.classList.contains('debug')) return;
+
+      const el = hs[current];
+      const step = 1; // % de cambio
+      if (['arrowleft','arrowright','arrowup','arrowdown'].includes(e.key.toLowerCase())){
+        e.preventDefault();
+        const style = el.style;
+        const w = parseFloat(style.width)  || 10;
+        const h = parseFloat(style.height) || 4;
+        if (e.key.toLowerCase()==='arrowleft')  style.width  = Math.max(1, w - step) + '%';
+        if (e.key.toLowerCase()==='arrowright') style.width  = Math.min(100, w + step) + '%';
+        if (e.key.toLowerCase()==='arrowup')    style.height = Math.max(1, h - step) + '%';
+        if (e.key.toLowerCase()==='arrowdown')  style.height = Math.min(100, h + step) + '%';
+      }
+      if (k === 'e'){
+        // Exporta estilos actuales por consola para copiar/pegar
+        Object.entries(hs).forEach(([id, node])=>{
+          console.log(`#${node.id}: left:${node.style.left}; top:${node.style.top}; width:${node.style.width}; height:${node.style.height};`);
+        });
+      }
+    });
+
+    // Click para mover el hotspot seleccionado (centro del rectángulo)
+    wrap.addEventListener('click',(e)=>{
+      if (!document.body.classList.contains('debug')) return;
+      const r = wrap.getBoundingClientRect();
+      const x = ((e.clientX - r.left) / r.width * 100).toFixed(2);
+      const y = ((e.clientY - r.top) / r.height * 100).toFixed(2);
+      const el = hs[current];
+      el.style.left = x + '%';
+      el.style.top  = y + '%';
+      console.log(`#${el.id}: left:${el.style.left}; top:${el.style.top};`);
+    });
+  </script>
 </body>
 </html>
