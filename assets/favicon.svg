@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <title>Sara Roma · crown</title>
+  <path d="M8 44 L16 24 L32 40 L48 20 L56 44 Z"
+        fill="none" stroke="#FFD400" stroke-width="6"
+        stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M10 44 H54"
+        fill="none" stroke="#FFD400" stroke-width="6"
+        stroke-linecap="round"/>
+</svg>
