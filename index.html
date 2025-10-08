@@ -1,33 +1,40 @@
 <!doctype html>
 <html lang="es">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>SARA ROM — Dossier</title>
-  <link rel="stylesheet" href="style.css"/>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>SARA ROM · Dossier (full screen img)</title>
   <style>
-    body{font-family:system-ui,Arial,sans-serif;margin:0}
-    .wrap{max-width:1100px;margin:1rem auto;padding:0 1rem}
-    img{width:100%;height:auto;border-radius:16px;box-shadow:0 10px 30px rgba(0,0,0,.08)}
-    header{padding:1rem 0 .5rem;border-bottom:1px solid #f1f1f1}
-    .muted{color:#666}
-    .actions{margin:.6rem 0}
-    .btn{display:inline-block;margin-right:.5rem;padding:.5rem .9rem;border:1px solid #e5e5e5;border-radius:12px;text-decoration:none;color:#111;background:#fff}
+    html,body{height:100%;margin:0;background:#fff}
+    .stage{position:fixed;inset:0;overflow:auto;background:#fff}
+    /* Muestra la página ocupando todo el viewport sin marcos */
+    .page{display:block;width:100vw;min-height:100vh;object-fit:contain}
+    .toolbar{position:fixed;top:10px;left:10px;display:flex;gap:.5rem;z-index:10}
+    .btn{padding:.5rem .8rem;border:1px solid #e5e5e5;border-radius:12px;background:#fff;cursor:pointer}
+    .btn:hover{background:#f7f7f7}
   </style>
 </head>
 <body>
-  <div class="wrap">
-    <header>
-      <h1>SARA ROM</h1>
-      <div class="muted">Diseño de escenografía y vestuario + UX</div>
-      <div class="actions">
-        <a class="btn" href="assets/SR_D+UX_25.pdf" download>⬇️ Descargar PDF</a>
-        <a class="btn" href="./?v=2">🔄 Recargar</a>
-      </div>
-    </header>
-    <main>
-      <img src="assets/page-1.jpg" alt="Dossier de Sara Rom">
-    </main>
+  <div class="toolbar">
+    <a class="btn" href="assets/SR_D+UX_25.pdf" download>⬇︎ PDF</a>
+    <button id="fs" class="btn">⛶ Pantalla completa</button>
   </div>
+
+  <div class="stage" id="stage">
+    <img class="page" src="assets/page-1.jpg" alt="Dossier de Sara Rom">
+  </div>
+
+  <script>
+    // Pantalla completa real
+    const fsBtn = document.getElementById('fs');
+    fsBtn.addEventListener('click', () => {
+      const el = document.documentElement;
+      if (!document.fullscreenElement) {
+        (el.requestFullscreen || el.webkitRequestFullscreen || el.msRequestFullscreen).call(el);
+      } else {
+        (document.exitFullscreen || document.webkitExitFullscreen || document.msExitFullscreen).call(document);
+      }
+    });
+  </script>
 </body>
 </html>
