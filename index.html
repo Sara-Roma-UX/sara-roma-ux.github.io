@@ -3,30 +3,18 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>SARA ROMA · Dossier (full screen img)</title>
+  <title>SARA ROMA · Dossier (full screen)</title>
   <style>
     html,body{height:100%;margin:0;background:#fff}
+    /* lienzo a pantalla completa */
     .stage{position:fixed;inset:0;overflow:auto;background:#fff}
-    /* Muestra la página ocupando todo el viewport sin marcos */
     .page{display:block;width:100vw;min-height:100vh;object-fit:contain}
-    .toolbar{position:fixed;top:10px;left:10px;display:flex;gap:.5rem;z-index:10}
-    .btn{padding:.5rem .8rem;border:1px solid #e5e5e5;border-radius:12px;background:#fff;cursor:pointer}
-    .btn:hover{background:#f7f7f7}
   </style>
 </head>
 <body>
-
-  <script>
-    // Pantalla completa real
-    const fsBtn = document.getElementById('fs');
-    fsBtn.addEventListener('click', () => {
-      const el = document.documentElement;
-      if (!document.fullscreenElement) {
-        (el.requestFullscreen || el.webkitRequestFullscreen || el.msRequestFullscreen).call(el);
-      } else {
-        (document.exitFullscreen || document.webkitExitFullscreen || document.msExitFullscreen).call(document);
-      }
-    });
-  </script>
+  <!-- Imagen a pantalla completa sin botones -->
+  <div class="stage">
+    <img class="page" src="assets/page-1.jpg" alt="Dossier de Sara Rom">
+  </div>
 </body>
 </html>
